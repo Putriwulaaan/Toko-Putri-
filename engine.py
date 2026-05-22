@@ -13,9 +13,11 @@ class NLPEngine:
         # Regex Patterns
         self.re_number = r"\b(\d+)\b"
         
-        # Membuat pola regex dinamis dari keys menu
-        menu_keys = "|".join(self.menu_data.keys())
+        # PERBAIKAN: Ubah semua nama barang di dictionary menjadi huruf kecil untuk regex
+        menu_keys_lower = [k.lower() for k in self.menu_data.keys()]
+        menu_keys = "|".join(menu_keys_lower)
         self.re_menu = rf"\b({menu_keys})\b"
+        
         self.re_split = r"[,.]|\bdan\b|\b&\b" # Pemisah kalimat (koma, titik, 'dan', '&')
         
         # Regex untuk pembatalan/pengurangan
@@ -23,14 +25,25 @@ class NLPEngine:
         self.re_reduce = r"\b(batalkan|kurangi|tidak jadi|hapus|cancel)\b"
 
     def _parse_single_segment(self, text):
-        """Helper untuk memproses satu potongan kalimat (misal: '3 Jam Tangan')"""
+        """Helper untuk memproses satu potongan kalimat (misal: '3 jam tangan')"""
         text = text.lower().strip()
         
         # 1. Cari Item
         item_match = re.search(self.re_menu, text)
         if not item_match:
             return None
-        item_key = item_match.group(1)
+            
+        matched_item = item_match.group(1) # Output: "jam tangan" (huruf kecil)
+        
+        # PERBAIKAN: Cari kunci asli di dictionary yang memiliki huruf kapital (contoh: "Jam Tangan")
+        item_key = None
+        for key in self.menu_data.keys():
+            if key.lower() == matched_item:
+                item_key = key
+                break
+                
+        if not item_key:
+            return None
         
         # 2. Cari Jumlah (Default 1)
         qty_match = re.search(self.re_number, text)
@@ -45,6 +58,8 @@ class NLPEngine:
 
     def parse_orders(self, full_text):
         """Memecah kalimat majemuk: 'pesan jam tangan 3, tas punggung 2' Menjadi list orders."""
+        # PERBAIKAN: Pastikan kalimat utuh diubah ke huruf kecil dari awal
+        full_text = full_text.lower() 
         segments = re.split(self.re_split, full_text)
         found_orders = []
         for segment in segments:
@@ -71,6 +86,3 @@ class NLPEngine:
         if re.search(r"\b(tidak|enggak|batal|no|salah)\b", text):
             return "NO"
         return "UNKNOWN"
-
-    def print_menu(self):
-        print(self.menu_data)
