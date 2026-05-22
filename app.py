@@ -21,10 +21,8 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # --- KOLOM INPUT USER & PROSES BALASAN ---
-prompt = st.chat_input("Ketik pesan Anda di sini... (contoh: 'menu', 'pesan 2 jam tangan')")
-
-if prompt:
-    
+# PERBAIKAN DI SINI: Menggunakan Walrus Operator (:=)
+if prompt := st.chat_input("Ketik pesan Anda di sini... (contoh: 'menu', 'pesan 2 jam tangan')"):
     
     # 1. Tampilkan pesan user
     with st.chat_message("user"):
